@@ -10,7 +10,8 @@ namespace Wfu.Ma.Reports.Lydall.Enums
         TotalHours = 5,
         RegularHours = 6,
         Overtime = 7,
-        RegularPay = 8,
-        DateDay = 9
+        DownTime = 8,
+        RegularPayTotal = 9,
+        DateDay = 10
     }
 }

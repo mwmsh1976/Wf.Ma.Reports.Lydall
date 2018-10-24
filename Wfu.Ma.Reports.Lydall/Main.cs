@@ -67,7 +67,8 @@ namespace Wfu.Ma.Reports.Lydall
                     return;
                 }
                 var summaryReport = new SummaryReport(datePicker.Value);
-                summaryReport.Create(_batchFileResults, reportPath.Text, (checkOpenReport.CheckState == CheckState.Checked));
+                summaryReport.Create(_batchFileResults, _employeeFileResults, reportPath.Text, 
+                    (checkOpenReport.CheckState == CheckState.Checked));
             }
             catch (Exception ex )
             {

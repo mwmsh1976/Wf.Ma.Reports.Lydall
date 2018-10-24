@@ -1,7 +1,9 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Office.Interop.Excel;
+using Wfu.Core.Reports.Employee;
 using Wfu.Ma.Reports.Lydall.Enums;
 
 namespace Wfu.Ma.Reports.Lydall.Classes
@@ -54,7 +56,7 @@ namespace Wfu.Ma.Reports.Lydall.Classes
             }
         }
 
-        public bool Create(List<Batch> batchList, string reportDestination, bool showReport = false)
+        public bool Create(List<Batch> batchList, List<Employee> employeeList, string reportDestination, bool showReport = false)
         {
             try
             {
@@ -64,26 +66,26 @@ namespace Wfu.Ma.Reports.Lydall.Classes
                 WriteHeader(worksheet);
                 foreach (Batch batch in batchList)
                 {
-                    worksheet.Cells[currentRow, SummaryReportHeader.Shift].Value = "";
-                    worksheet.Cells[currentRow, SummaryReportHeader.Employee].Value = batch.EmployeeName.ToUpper() + " [" + batch.EmployeeId + "]";
-                    worksheet.Cells[currentRow, SummaryReportHeader.Building].Value = "";
-                    worksheet.Cells[currentRow, SummaryReportHeader.RegularPay].Value = batch.GrossPay.ToString("#.##").ToUpper();
-                    for (int i = 0; i < batch.TimeDetail.Count - 1; i++)
+                    var batchItem = batch.TimeDetail.Where(b => b.Date.ToShortDateString() == _day.ToShortDateString()).FirstOrDefault();
+                    if (batchItem != null && batchItem.TotalTime > 0)
                     {
-                        if(batch.TimeDetail[i].Date.ToShortDateString() == _day.ToShortDateString())
-                        {
-                            worksheet.Cells[currentRow, SummaryReportHeader.TotalHours].Value = batch.TimeDetail[i].TotalTime.ToString("#.##").ToUpper();
-                            worksheet.Cells[currentRow, SummaryReportHeader.Department].Value = batch.TimeDetail[i].Department.ToUpper();
-                            worksheet.Cells[currentRow, SummaryReportHeader.RegularHours].Value = batch.TimeDetail[i].RegularTimeTotal.ToString("#.##").ToUpper();
-                            worksheet.Cells[currentRow, SummaryReportHeader.Overtime].Value = batch.TimeDetail[i].OverTimeOneTotal.ToString("#.##").ToUpper();
-                            worksheet.Cells[currentRow, SummaryReportHeader.DateDay].Value = batch.TimeDetail[i].Date.ToShortDateString() + " " + batch.TimeDetail[0].Day;
-                        }
+                        var employee = employeeList.Where(e => e.PayrollNumber == batch.EmployeeId).FirstOrDefault();
+                        worksheet.Cells[currentRow, SummaryReportHeader.Shift].Value = employee.DepartmentName.ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.Employee].Value = batch.EmployeeName.ToUpper() + " [" + batch.EmployeeId + "]";
+                        worksheet.Cells[currentRow, SummaryReportHeader.Building].Value = employee.DepartmentCode.ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.TotalHours].Value = (batchItem.TotalTime).ToString("#.##").ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.Department].Value = batchItem.Department.ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.RegularHours].Value = batchItem.RegularTimeTotal.ToString("#.##").ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.Overtime].Value = batchItem.OverTimeOneTotal.ToString("#.##").ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.DownTime].Value = "";
+                        worksheet.Cells[currentRow, SummaryReportHeader.RegularPayTotal].Value = (batchItem.RegularTimeTotal * employee.PayRate).ToString("#.##").ToUpper();
+                        worksheet.Cells[currentRow, SummaryReportHeader.DateDay].Value = batchItem.Date.ToShortDateString() + " " + batchItem.Day.ToUpper();
+                        currentRow += 1;
                     }
-                    currentRow += 1;
                 }
                 worksheet.Cells.Select();
                 worksheet.Cells.EntireColumn.AutoFit();
-                worksheet.Range("A1:I1").Font.Bold = true;
+                worksheet.Range("A1:J1").Font.Bold = true;
                 return true;
             }
             catch
@@ -120,7 +122,8 @@ namespace Wfu.Ma.Reports.Lydall.Classes
             worksheet.Cells[1, SummaryReportHeader.TotalHours].Value = "Total Hrs";
             worksheet.Cells[1, SummaryReportHeader.RegularHours].Value = "Reg. Hrs";
             worksheet.Cells[1, SummaryReportHeader.Overtime].Value = "OT";
-            worksheet.Cells[1, SummaryReportHeader.RegularPay].Value = "Reg. Pay";
+            worksheet.Cells[1, SummaryReportHeader.DownTime].Value = "DT";
+            worksheet.Cells[1, SummaryReportHeader.RegularPayTotal].Value = "Reg. Pay";
             worksheet.Cells[1, SummaryReportHeader.DateDay].Value = "Date/Day";
         }
 
