@@ -5,12 +5,14 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using Wfu.Ma.Reports.Lydall.Classes;
+using Wfu.Core.Reports.Employee;
 
 namespace Wfu.Ma.Reports.Lydall
 {
 	public partial class Main : Form
 	{
         List<Batch> _batchFileResults = null;
+        List<Employee> _employeeFileResults = null;
 
         public Main()
 		{
@@ -24,26 +26,37 @@ namespace Wfu.Ma.Reports.Lydall
 				 this.BatchReportPath.Text = openFileDialog.FileName;
 				if (BatchReportPath.Text.Trim() != "")
                 {
-                    _batchFileResults = ProcessSelectedFile(BatchReportPath.Text.Trim());
+                    _batchFileResults = ProcessSelectedBatchReportFile(BatchReportPath.Text.Trim());
                     datePicker.MaxDate = _batchFileResults.Max(x => x.PayPeriodEnd);
                     datePicker.MinDate = _batchFileResults.Min(x => x.PayPeriodStart);
-                    datePicker.Enabled = true;
+                    datePicker.Enabled = (_batchFileResults != null) && (_employeeFileResults != null);
                 }
 			}
 		}
 
-		private List<Batch> ProcessSelectedFile(string path)
+		private List<Batch> ProcessSelectedBatchReportFile(string path)
 		{
 			if (File.Exists(path))
 			{
-				var batchReportContents = new BatchReportScanner(path);
+				var batchReportContents = new BatchReport(path);
                 return batchReportContents.Scan();
 			}
 			MessageBox.Show("Whoops! We can't find a file located at '" + path + "'");
 			return new List<Batch>();
 		}
 
-		private void createButton_Click(object sender, EventArgs e)
+        private List<Employee> ProcessSelectedEmployeeReportFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                var employeeReportContents = new EmployeeReport(path);
+                return employeeReportContents.Scan();
+            }
+            MessageBox.Show("Whoops! We can't find a file located at '" + path + "'");
+            return new List<Employee>();
+        }
+
+        private void createButton_Click(object sender, EventArgs e)
 		{
             try
             {
@@ -74,6 +87,19 @@ namespace Wfu.Ma.Reports.Lydall
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowser.SelectedPath))
                 {
                     reportPath.Text = folderBrowser.SelectedPath;
+                }
+            }
+        }
+
+        private void BrowseEmployeeReport_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                this.EmployeeReportPath.Text = openFileDialog.FileName;
+                if (EmployeeReportPath.Text.Trim() != "")
+                {
+                    _employeeFileResults = ProcessSelectedEmployeeReportFile(EmployeeReportPath.Text.Trim());
+                    datePicker.Enabled = (_batchFileResults != null) && (_employeeFileResults != null);
                 }
             }
         }

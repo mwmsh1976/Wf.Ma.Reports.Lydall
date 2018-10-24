@@ -1,8 +1,8 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using Wfu.Ma.Reports.Lydall.Enums;
 using Microsoft.Office.Interop.Excel;
+using Wfu.Ma.Reports.Lydall.Enums;
 
 namespace Wfu.Ma.Reports.Lydall.Classes
 {
@@ -30,13 +30,23 @@ namespace Wfu.Ma.Reports.Lydall.Classes
         {
             get
             {
-                if (_xlApp == null)
+                try
                 {
-                    _xlApp = new Application();
-                    _xlApp.Visible = false;
-                    _xlApp.ScreenUpdating = false;
+                    if (_xlApp == null)
+                    {
+                        _xlApp = new Application();
+                        _xlApp.Visible = false;
+                        _xlApp.ScreenUpdating = false;
+                    }
+                    return _xlApp;
                 }
-                return _xlApp;
+                catch (Exception ex)
+                {
+                    System.Windows.Forms.MessageBox.Show("Whoops! An error occured." 
+                        + Environment.NewLine + "I wonder if the version of Excel is the correct version?" +
+                        ex.Message);
+                    return null;
+                }                
             }
             set
             {
